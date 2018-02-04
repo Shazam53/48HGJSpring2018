@@ -14,7 +14,7 @@ public class GameController : MonoBehaviour {
 	public static Board currentBoard;
 
     /// The current index of the current enemy
-    public static int currentEnemyIndex = -1;
+    public static int currentEnemyIndex = 0;
 
     [SerializeField]
     Font cardFont;
@@ -94,7 +94,6 @@ public class GameController : MonoBehaviour {
 
 	/// Creates a card of type
 	public static Card CreateCard(System.Type cardType) {
-        if (cardType == typeof(CardSlash)) {Debug.Log("hello?"); }
 		return Instantiate(gameController.cardDictionary[cardType]);
 	}
 
@@ -107,7 +106,9 @@ public class GameController : MonoBehaviour {
     public IEnumerator StartGame() {
         currentBoard = Instantiate(boardPrefab);
         // Give player basic deck
-        //TODO initial text boxes (story and tutorial)
+
+        yield return StartCoroutine(TextboxController.ShowText("Welcom to the game"));
+
         //Stacks all the cards into their character's deck
 		yield return StartCoroutine(currentBoard.Initialize(Instantiate(characterPrefab), CreateEnemy()));
     }
@@ -118,10 +119,13 @@ public class GameController : MonoBehaviour {
         StartCoroutine(StartGame());
     }
 
+    public static void RestartGameStaticMethod() {
+        gameController.RestartGame();
+    }
+
     public static Character CreateEnemy() {
-        currentEnemyIndex++;
         Character enemy = Instantiate(gameController.characterPrefab);
-        enemy.CreateEnemyDeck(currentEnemyIndex);
+        // enemy.CreateEnemyDeck(currentEnemyIndex);
         return enemy;
     }
 }

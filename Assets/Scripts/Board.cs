@@ -64,11 +64,10 @@ public class Board : MonoBehaviour {
 		playerDeck.AddCard(GameController.CreateCard(typeof(CardFeign)));
 		playerDeck.AddCard(GameController.CreateCard(typeof(CardIntimidate)));
 
-        //TODO: Assign predetermined decks to enemy
-        // Deck enemyDeck = enemy.CreateEnemyDeck(GameController.currentEnemyIndex);
+        Deck enemyDeck = enemy.CreateEnemyDeck(GameController.currentEnemyIndex);
 
-		Deck enemyDeck = new Deck(GameController.CreateCard(typeof(CardSlash)));
-		playerDeck.AddCard(GameController.CreateCard(typeof(CardSlash)));
+		// Deck enemyDeck = new Deck(GameController.CreateCard(typeof(CardSlash)));
+		// playerDeck.AddCard(GameController.CreateCard(typeof(CardSlash)));
 
         //Initializes both the player and the enemy and stacks their cards into their corresponding deck
 		yield return StartCoroutine(player.Initialize(15, 0, 0, playerDeck, true, enemy, this));
@@ -244,7 +243,6 @@ public class Board : MonoBehaviour {
 
 	/// Sets up the game board for the next turn's planning phase
 	IEnumerator NextTurn() {
-		currentPhase = 0;
 		// return all cards that where not destroyed to the player's hand.
 		for (int i = 0; i < 3; i++) {
 			foreach (Card card in cardsOnBoard[player][i]) {
@@ -269,6 +267,7 @@ public class Board : MonoBehaviour {
 		}
 		yield return StartCoroutine(enemy.DrawCard());
 		yield return StartCoroutine(player.DrawCard());
+		currentPhase = 0;
 	}
 
 	/// Ends the planning phase and starts to use the cards.
@@ -295,6 +294,9 @@ public class Board : MonoBehaviour {
 
 		// add all cards to their respective list
 		foreach (Card card in playerCards) {
+			if (card == null) {
+				Debug.LogError("Null card in player hand");
+			}
 			if (card as MeleeCard == null && card as RangedCard == null) {
 				nonAttackCards.Add(card);
 			} else {
@@ -302,6 +304,9 @@ public class Board : MonoBehaviour {
 			}
 		}
 		foreach (Card card in enemyCards) {
+			if (card == null) {
+				Debug.LogError("Null card in player hand");
+			}
 			if (card as MeleeCard == null && card as RangedCard == null) {
 				nonAttackCards.Add(card);
 			} else {
@@ -310,6 +315,8 @@ public class Board : MonoBehaviour {
 		}
 		nonAttackCards.AddRange(attackCards);
 		foreach (Card card in nonAttackCards) {
+			if (card == null) { Debug.Log(card.holder.player); }
+			Debug.Log("hello");
 			yield return StartCoroutine(card.Use());
 		}
 	}
@@ -332,9 +339,22 @@ public class Board : MonoBehaviour {
 		}
 	}
 
-	public IEnumerator NextEnemy(int enemyIndex) {
-		enemy.DestroyAllCards();
-		Destroy(enemy.gameObject);
+	public IEnumerator NextEnemy() {
+		GameController.currentEnemyIndex++;
+		for (int i = 0; i < 3; i++) {
+			foreach (Card card in cardsOnBoard[player][i]) {
+				Destroy(card.gameObject);
+			}
+			cardsOnBoard[player][i] = new List<Card>();
+			foreach (Card card in cardsOnBoard[enemy][i]) {
+				Destroy(card.gameObject);
+			}
+			cardsOnBoard[enemy][i] = new List<Card>();
+		}
+		if (enemy != null) {
+			enemy.DestroyAllCards();
+			Destroy(enemy.gameObject);
+		}
 		enemy = GameController.CreateEnemy();
 		//TODO yield return textbox
 		yield break;
